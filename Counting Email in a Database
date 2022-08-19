@@ -1,0 +1,43 @@
+import sqlite3 #https://docs.python.org/3/library/sqlite3.html
+
+conn = sqlite3.connect('emaildb.sqlite') #Each open SQLite database is represented by a Connection object, which is created using sqlite3.connect(). Fase donde chequea el acceso al archivo
+#Once a Connection has been established, create a Cursor object and call its execute() method to perform SQL commands:
+
+
+cur = conn.cursor()   # para poder empezar a ejecutar comandos de sql uso .cursor()
+
+cur.execute('DROP TABLE IF EXISTS Counts') #counts es la tabla
+
+cur.execute('''
+CREATE TABLE Counts (email TEXT, count INTEGER)''')
+
+fname = input('Enter file name: ')
+if (len(fname) < 1): fname = 'mbox-short.txt'
+fh = open(fname)
+for line in fh:
+    if not line.startswith('From: '): continue
+    pieces = line.split()
+    email = pieces[1]
+    cur.execute('SELECT count FROM Counts WHERE email = ? ', (email,))    
+    row = cur.fetchone()   #This method retrieves the next row of a query result set and returns a single sequence, or None if no more rows are available. By default, the returned tuple consists of data returned by the MySQL server, converted to Python objects. 
+    if row is None:
+        cur.execute('''INSERT INTO Counts (email, count)
+                VALUES (?, 1)''', (email,))
+    else:
+        cur.execute('UPDATE Counts SET count = count + 1 WHERE email = ?',
+                    (email,))
+    conn.commit()
+
+# https://www.sqlite.org/lang_select.html
+sqlstr = 'SELECT email, count FROM Counts ORDER BY count DESC LIMIT 10'
+
+for row in cur.execute(sqlstr):
+    print(str(row[0]), row[1])
+
+cur.close()
+
+
+
+
+NOTAS: porque esta el signo de pregunta---->Notice that we used ? placeholders to bind data to the query. Always use placeholders instead of string formatting to bind Python values to SQL statements, to avoid SQL injection attacks. See the placeholders how-to for more details.SQL injection is a code injection technique that might destroy your database. SQL injection is one of the most common web hacking techniques.
+https://docs.python.org/3/library/sqlite3.html#using-placeholders-to-bind-values-in-sql-queries 

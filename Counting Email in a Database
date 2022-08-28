@@ -38,6 +38,5 @@ cur.close()
 
 
 
-
 NOTAS: porque esta el signo de pregunta---->Notice that we used ? placeholders to bind data to the query. Always use placeholders instead of string formatting to bind Python values to SQL statements, to avoid SQL injection attacks. See the placeholders how-to for more details.SQL injection is a code injection technique that might destroy your database. SQL injection is one of the most common web hacking techniques.
 https://docs.python.org/3/library/sqlite3.html#using-placeholders-to-bind-values-in-sql-queries 

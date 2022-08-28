@@ -1,0 +1,62 @@
+Counting Organizations
+This application will read the mailbox data (mbox.txt) and count the number of email messages per organization (i.e. domain name of the email address) using a database 
+with the following schema to maintain the counts. What is an email domain?
+To put it simply, the part of your email address behind the @ symbol – in other words, @mail.com, @email.com, @usa.com – is called a domain.
+
+CREATE TABLE Counts (org TEXT, count INTEGER)
+
+If you run the program multiple times in testing or with dfferent files, make sure to empty out the data before each run.
+
+You can use this code as a starting point for your application: http://www.py4e.com/code3/emaildb.py.
+
+The data file for this application is the same as in previous assignments: http://www.py4e.com/code3/mbox.txt.
+
+Because the sample code is using an UPDATE statement and committing the results to the database as each record is read in the loop, it might take as long as a few minutes
+to process all the data. The commit insists on completely writing all the data to disk every time it is called.
+The program can be speeded up greatly by moving the commit operation outside of the loop. In any database program, there is a balance between the number of operations
+you execute between commits and the importance of not losing the results of operations that have not yet been committed.
+
+---------------------------------------------------------------------------------------------
+#Access data stored in SQLite using Python. el codigo ----> https://www.py4e.com/code3/emaildb.py
+
+import sqlite3
+
+conn = sqlite3.connect("emaildb.sqlite")   #si no existe, crea una
+cur = conn.cursor()    # ! mandamos y recibimos la info a traves de este cursor
+
+cur.execute("DROP TABLE IF EXISTS Counts")
+cur.execute("CREATE TABLE Counts (email TEXT, count INTEGER)")
+
+# NOTE: hasta aca creo una tabla llamada Counts y le agrego dos columnas
+
+fname = input('Enter file name: ')
+if (len(fname) < 1): fname = 'mbox-short.txt'    #http://data.pr4e.org/mbox-short.txt
+fh = open(fname)
+for line in fh:
+    if not line.startswith('From: '): continue
+    pieces = line.split()    # te guarda las palabras por ej: From: stephen.marquard@uct.ac.za
+    email = pieces[1]        # [0]= From: ; [1]= stephen.marquard@uct.ac.za
+    cur.execute('SELECT count FROM Counts WHERE email = ? ', (email,)) # aca es como cuando abre un archivo, pero abre un record
+    row = cur.fetchone()    #Return the next row of a query result set as a tuple. Return None if no more data is available.
+    if row is None:
+        cur.execute('''INSERT INTO Counts (email, count)
+                VALUES (?, 1)''', (email,))
+# si row es NONE, osea que es la primera vez que aparece el mail, contar 1. sino contar count + 1
+    else:
+        cur.execute('UPDATE Counts SET count = count + 1 WHERE email = ?', (email,))
+    conn.commit()
+
+# https://www.sqlite.org/lang_select.html
+sqlstr = 'SELECT email, count FROM Counts ORDER BY count DESC LIMIT 10'
+
+for row in cur.execute(sqlstr):
+    print(str(row[0]), row[1])    # row[0] sera el email y row[1] sera el count
+
+cur.close()   #cerras la conexion
+
+
+
+#para correr esto desde la terminal.
+#cd desktop ---> cd atom ---> dir --->nombre.py
+
+--------------------------------------------------------------------------------------------------------

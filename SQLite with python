@@ -54,4 +54,51 @@ provide a single element tuple, like this: (value,).
 
 
 The INSERT statement implicitly opens a transaction, which needs to be committed before changes are saved in the database (see Transaction control for details). Call
-conn.commit() on the connection object to commit the transaction:
+conn.commit() on the connection object to commit the transaction
+
+
+
+CODIGO para counting email in a database
+------------------------------------------------------------------------------------------------------------
+#Access data stored in SQLite using Python. el codigo ----> https://www.py4e.com/code3/emaildb.py
+
+import sqlite3
+
+conn = sqlite3.connect("emaildb.sqlite")   #si no existe, crea una
+cur = conn.cursor()    # ! mandamos y recibimos la info a traves de este cursor
+
+cur.execute("DROP TABLE IF EXISTS Counts")
+cur.execute("CREATE TABLE Counts (email TEXT, count INTEGER)")
+
+# NOTE: hasta aca creo una tabla llamada Counts y le agrego dos columnas
+
+fname = input('Enter file name: ')
+if (len(fname) < 1): fname = 'mbox-short.txt'    #http://data.pr4e.org/mbox-short.txt
+fh = open(fname)
+for line in fh:
+    if not line.startswith('From: '): continue
+    pieces = line.split()    # te guarda las palabras por ej: From: stephen.marquard@uct.ac.za
+    email = pieces[1]        # [0]= From: ; [1]= stephen.marquard@uct.ac.za
+    cur.execute('SELECT count FROM Counts WHERE email = ? ', (email,)) # aca es como cuando abre un archivo, pero abre un record
+    row = cur.fetchone()    #Return the next row of a query result set as a tuple. Return None if no more data is available.
+    if row is None:
+        cur.execute('''INSERT INTO Counts (email, count)
+                VALUES (?, 1)''', (email,))
+# si row es NONE, osea que es la primera vez que aparece el mail, contar 1. sino contar count + 1
+    else:
+        cur.execute('UPDATE Counts SET count = count + 1 WHERE email = ?', (email,))
+    conn.commit()
+
+# https://www.sqlite.org/lang_select.html
+sqlstr = 'SELECT email, count FROM Counts ORDER BY count DESC LIMIT 10'
+
+for row in cur.execute(sqlstr):
+    print(str(row[0]), row[1])    # row[0] sera el email y row[1] sera el count
+
+cur.close()   #cerras la conexion
+
+
+
+#para correr esto desde la terminal.
+#cd desktop ---> cd atom ---> dir --->nombre.py
+---------------------------------------------------------------------------------------------------------

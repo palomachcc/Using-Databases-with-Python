@@ -1,0 +1,57 @@
+https://docs.python.org/3/library/sqlite3.html#sqlite3-tutorial 
+
+First, we need to create a new database and open a database connection to allow sqlite3 to work with it. Call sqlite3.connect() to to create a connection to the database
+emaildb.sqlite in the current working directory, implicitly creating it if it does not exist:
+
+
+  import sqlite3
+  conn = sqlite3.connect('emaildb.sqlite')
+  
+  
+The returned Connection object "conn" represents the connection to the on-disk database. In order to execute SQL statements and fetch results from SQL queries, we will 
+need to use a database cursor. Call conn.cursor() to create the Cursor:
+ 
+ 
+  cur = conn.cursor()
+  
+  
+A Cursor instance has some attributes and methods. por ejemplo: execute() o fetchone()
+Now that we’ve got a database connection and a cursor, we can create a database table with columns. For simplicity, we can just use column names in the table declaration 
+thanks to the flexible typing feature of SQLite, specifying the data types is optional. Execute the CREATE TABLE statement by calling cur.execute(...):
+ 
+ 
+  cur.execute('''
+CREATE TABLE Counts (email TEXT, count INTEGER)''')  
+
+
+o es lo mismo decir:
+
+
+  cur.execute("CREATE TABLE Counts (email TEXT, count INTEGER)")
+  
+  
+"Counts" es el nombre de la tabla y luego entre parentesis van las columnas, donde puedo o no especificar el tipo de dato. 
+Otras sentencias a analizar...
+donde dice email ira un email ingresado por el usuario. Al pareces es peligroso poner ese tipo de strings, especialemnte los ingresados por el usuario, en SQL. Al 
+signo de pregunta lo llaman "placeholder". Con eso se asejuran de que no ocurra una "SQL injection". SQL injection is a code injection technique that might destroy 
+your database. SQL injection is one of the most common web hacking techniques.
+SQL operations usually need to use values from Python variables. However, beware of using Python’s string operations to assemble queries, as they are vulnerable to 
+SQL injection attacks. https://docs.python.org/3/library/sqlite3.html#sqlite3-placeholders
+An SQL statement may use one of two kinds of placeholders: question marks (qmark style) or named placeholders (named style).
+
+
+  cur.execute('SELECT count FROM Counts WHERE email = ? ', (email,))    
+  
+
+entonces tengo un placeholder "?" que en ultima instancia sera reemplazado por el email. In Python, Placeholder is a word, characters or a string of characters to
+hold a temporary place. Otro ejemplo seria: cursor.execute("INSERT INTO table VALUES (?, ?, ?)", (var1, var2, var3)) donde var1 es una variable de python.
+
+
+Ahora porque lo pone como (email,)....NOSE la sintaxis dice que debe ir un tuple. esto es un tuple con una sola cosa (email,)
+Generally*, the value passed to cursor.execute must wrapped in an ordered sequence such as a tuple or list even though the value itself is a singleton, so we must 
+provide a single element tuple, like this: (value,).
+
+
+
+The INSERT statement implicitly opens a transaction, which needs to be committed before changes are saved in the database (see Transaction control for details). Call
+conn.commit() on the connection object to commit the transaction:

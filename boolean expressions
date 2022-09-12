@@ -1,0 +1,49 @@
+A boolean expression (or logical expression) evaluates to one of two states true or false. Python provides the boolean type that can be either set to False or True. Many functions and operations returns boolean objects.
+
+The not keyword can also be used to inverse a boolean type.
+
+>>> not True
+False
+
+
+Comparison operators
+The <, <=, >, >=, ==, != operators compare the values of 2 objects and returns True or False. Comparison depends on the type of the objects
+
+
+https://realpython.com/python-boolean/
+
+ They’re keywords. Unlike many other Python keywords, True and False are Python expressions. Since they’re expressions, they can be used wherever other expressions, like 1 + 1, can be used.
+
+It’s possible to assign a Boolean value to variables, but it’s not possible to assign a value to True:
+
+>>> a_true_alias = True
+>>> a_true_alias
+True
+>>> True = 5
+  File "<stdin>", line 1
+SyntaxError: cannot assign to True
+
+
+
+Booleans are considered a numeric type in Python. This means they’re numbers for all intents and purposes. In other words, you can apply arithmetic operations to Booleans, and you can also compare them to numbers:
+
+>>> True == 1
+True
+>>> False == 0
+True
+>>> True + (False / True)
+1.0
+
+
+There aren’t many uses for the numerical nature of Boolean values, but there’s one technique you may find helpful. Because True is equal to 1 and False is equal to 0, adding Booleans together is a quick way to count the number of True values. This can come in handy when you need to count the number of items that satisfy a condition.
+
+For example, if you want to analyze a verse in a classic children’s poem to see what fraction of lines contain the word "the", then the fact that True is equal to 1 and False is equal to 0 can come in quite handy:
+
+>>> lines="""\
+... He took his vorpal sword in hand;
+...       Long time the manxome foe he sought—
+... So rested he by the Tumtum tree
+...       And stood awhile in thought.
+... """.splitlines()
+>>> sum("the" in line.lower() for line in lines) / len(lines)
+0.5

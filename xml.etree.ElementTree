@@ -1,0 +1,33 @@
+XML
+
+Extensible Markup Language (XML) is a markup language that defines a set of rules for encoding documents in a format that is both human-readable and machine-readable. 
+
+Primero: An XML document contains XML Elements.An XML element is everything from (including) the element's start tag to (including) the element's end tag.
+An element can contain: text, attributes, other elements or a mix of the above. Ver ejemplo: https://www.w3schools.com/xml/xml_elements.asp
+Y despues puedo distinguier entre cosas: 
+    Root element (en el archivo Library el "root element" es lo que dice plist)
+    childs of the root element
+
+
+The xml.etree.ElementTree module implements a simple and efficient API for parsing and creating XML data.
+NOTA: tienen malas medidas de seguridad, no usar con cualquier tipo de datos 
+
+
+XML is an inherently hierarchical data format, and the most natural way to represent it is with a tree. ET has two classes for this purpose - ElementTree represents the
+whole XML document as a tree, and Element represents a single node in this tree.???
+
+
+
+------------------------------------------------
+Parsing XML
+
+Tenes un archivo en la siguiente variable---> fname=Library.xml 
+The first thing you will need to do is to import the xml.etree.ElementTree module. Then, the parse() method parses the ‘Sample.xml’ file.
+
+There are two ways to parse the file using ‘ElementTree’ module. The first is by using the parse() function 
+    stuff = ET.parse(fname)
+
+findall(match, namespaces=None)
+Finds all matching subelements, by tag name or path. Returns a list containing all matching elements in document order. namespaces is an optional mapping from namespace prefix to full name. Pass '' as prefix to move all unprefixed tag names in the expression into the given namespace.
+    por ejemplo:
+    all = stuff.findall('dict/dict/dict')

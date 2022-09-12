@@ -1,0 +1,71 @@
+Para el archivo Library.xml, cuando buscamos el elemento (d) dict/dict/dict obtenemos algo de este tipo:
+
+<key>Track ID</key>
+<integer>369</integer>
+<key>Name</key>
+<string>Another One Bites The Dust</string>
+<key>Artist</key>
+<string>Queen</string>
+<key>Composer</key>
+<string>John Deacon</string>
+<key>Album</key>       
+[...]
+
+
+dentro del codigo hay una funcion que usamos para recorrer ese elemento d:
+
+----------------------------------------
+def lookup(d, key):
+    found = False
+    for child in d:     #child seria cada una de las cosas que contiene cada uno de los elementos de "all" 
+        if found : return child.text
+        if child.tag == 'key' and child.text == key :     
+            found = True
+    return None
+----------------------------------
+
+NOTA: "key" se refiere al tag, donde dice textualmente <key>. El segundo key (sin comillas) se refiere al parametro que meto en la funcion. Por ejemplo: 
+
+name = lookup(entry, 'Name')
+lookup(entry, 'Track ID')
+
+
+
+EXPLICACION
+
+1.    Initially found is set to False.
+
+2.    The function will start looping through the code, where child always has a <tag>text</tag> format.
+
+3.    When the function finds a child that is a <key>, i.e. where the tag is <key>...</key> (child.tag == 'key') and it is the specific key you wanted 
+(child.text == key) (donde key puede ser Track ID, Artist, Composer, Album, Genre, etc.),found is set to True, otherwise it will remain False. 
+
+Don't get confused by  the two keys here. The 'key' in child.tag == 'key' refers to the type of tag in question, while key in child.text == key is the second argument in the lookup(d, key) 
+function. In this instance, where the key is 'Track ID', found will be True if the child is <key>Track ID</key>.
+
+4.    So the loop goes to the next child after <key>Track ID</key>, which is <integer>369</integer>. Here found is True, so the function will exit here at line 4 and return child.text that is '369', which is the corresponding value to the 'Track ID' key. Note that the return statement exits the whole function, not just the for loop! *
+
+5.    Therefore, the function will only go to line 7 and return None if it couldn't find the specific key you wanted. In this instance, there was no Track ID (<key>Track ID</key>) in the code it parsed.
+
+Which brings us to QUESTION 2:
+
+What a continue statement does is like cutting the current loop short and jumps to the next item in the iteration. It basically skips the block of code after it within the loop and starts a new one. It is similar to the break statement in that it stops all subsequent code in the loop from being executed, but where break would arrest the iteration completely and quit the for loop at that specific point, continue lets it carry on with the next item.
+the for entry in all: loop has two parts, each with a checkpoint preceding them to decide whether to execute that part:
+
+PART ONE: we are trying to parse through all that is comprised of selected bits (that contain the information of tracks, which are at the 'dict/dict/dict' level) of the xml code, and get the name, artist, album, count, etc. for all tracks.
+
+PART TWO: we put these values into the table within the same loop **
+
+However, there is no point in doing PART TWO if we couldn't get the the data from an entry. This is where the checkpoints and continue come in.
+
+The statement if ( lookup(entry, 'Track ID') is None ): is basically a boolean. Remember that lookup(entry, 'Track ID') will return None if there was no <key>Track ID</key> in entry. Which makes the statement in question if ( None is None ): True, so the the lines after the continue are skipped and it jumps to the next entry in all. Because, in theory, all tracks should have a Track ID, there is no point in looking for the name, artist...and the rest. What is more, it might give us erroneous data. It is best just ignore this block of code even if it was at the right ('dict/dict/dict') level.
+
+Same goes for line 16: if name is None or artist is None or album is None : continue. If any of these values were missing, why would you attempt to insert them into the table. Just jump to the next entry with the continue statement. ***
+
+________________________________________________________________________________
+
+* In a different thread someone had a question about why the if found: return child.text only exits when found is True and why not when False, as it doesn't seem to specify when it can be executed. Well, it does. All if statements must contain a boolean expression that needs to be evaluated, i.e. a condition to be met, otherwise you wouldn't use conditional statements in the first place and just have the block of code be constantly executed. When the expression in the if statement evaluates to True the branch gets executed, and if False, it won't. Since all objects have a boolean value, the if x: has a boolean expression in it. Maybe a bit hidden, but it's the same as if x is True: or as if x == True: . These will evaluate to True if x has a True value (any value except False, None, 0 or an empty collection as these are False). The if x: is syntactically valid and with simple truth value testing PEP8 recommends using this less explicit form and reserve the logical and comparison operators for more complex evaluations. More info on truth value testing can be found here, here and here.
+
+** BONUS MATERIAL: I wrote some explanation of the tuples and '?' placeholders in the cur.execute() statements in another thread, if anyone is interested.
+
+*** It is reasonable to expect that some info will be missing in the xml file. Take 'rating', for example. It is quite likely that a lot of songs haven't been rated yet. So you have to decide what your program should do in this case and precautions need to be taken accordingly. In this program it is the line if name is None or artist is None or album is None : continue that handles missing or incomplete data. Note how 'count', 'rating' and 'length' are not included in this line . So the row will be inserted to the 'Track' table even if these values were missing, in which case their value inserted to the table will be 'None', or the SQL equivalent 'NULL', to be precise. This is because this info is not as important as the track 'name', 'artist' and 'album', which are the logical keys that the structure of this database relies on. These are the variables that have their own tables that are connected with the foreign key > primary key relationships. Tracks with missing/None values for any of these are not allowed and won't be inserted into the database. What is more, the program would give a 'NoneType object is not subscriptable' error when it tries to get the foreign key with the cur.fetchone()[0] statement if such rows were inserted! 

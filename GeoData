@@ -1,0 +1,145 @@
+https://www.coursera.org/learn/python-databases/lecture/qfNbo/worked-example-geodata-chapter-16
+
+La idea es que lea de la web. pero para este ejercicios caergo unos archivos :
+[   ]	where.data	2019-08-12 00:51	7.7K	 
+[TXT]	where.html	2019-08-12 00:51	1.9K	 
+[   ]	where.js	2019-08-12 00:51	19K	 
+
+
+por ejemplo el que dice where.data tiene datos de este tipo: 
+
+AGH University of Science and Technology
+Academy of Fine Arts Warsaw Poland
+American University in Cairo
+Arizona State University
+Athens Information Technology
+BITS Pilani
+Babcock University
+Banaras Hindu University
+Bangalore University
+Baylor University
+Beijing normal university
+Belarusian State University [...]
+
+READ ME https://www.py4e.com/code3/geodata/README.txt 
+
+
+CODIGO: 
+--------------------------------------------------------------
+import urllib.request, urllib.parse, urllib.error
+import http
+import sqlite3
+import json
+import time
+import ssl
+import sys
+
+api_key = False
+# If you have a Google Places API key, enter it here
+# api_key = 'AIzaSy___IDByT70'
+
+if api_key is False:
+    api_key = 42
+    serviceurl = "http://py4e-data.dr-chuck.net/json?"
+else :
+    serviceurl = "https://maps.googleapis.com/maps/api/geocode/json?"
+
+# Additional detail for urllib
+# http.client.HTTPConnection.debuglevel = 1
+
+conn = sqlite3.connect('geodata.sqlite')
+cur = conn.cursor()
+
+cur.execute('''
+CREATE TABLE IF NOT EXISTS Locations (address TEXT, geodata TEXT)''')
+
+# Ignore SSL certificate errors
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
+
+fh = open("where.data")
+count = 0
+for line in fh:
+    if count > 200 :
+        print('Retrieved 200 locations, restart to retrieve more')
+        break
+
+    address = line.strip()
+    print('')
+    cur.execute("SELECT geodata FROM Locations WHERE address= ?",
+        (memoryview(address.encode()), ))
+
+    try:
+        data = cur.fetchone()[0]
+        print("Found in database ",address)
+        continue
+    except:
+        pass
+
+    parms = dict()
+    parms["address"] = address
+    if api_key is not False: parms['key'] = api_key
+    url = serviceurl + urllib.parse.urlencode(parms)
+
+    print('Retrieving', url)
+    uh = urllib.request.urlopen(url, context=ctx)
+    data = uh.read().decode()
+    print('Retrieved', len(data), 'characters', data[:20].replace('\n', ' '))
+    count = count + 1
+
+    try:
+        js = json.loads(data)
+    except:
+        print(data)  # We print in case unicode causes an error
+        continue
+
+    if 'status' not in js or (js['status'] != 'OK' and js['status'] != 'ZERO_RESULTS') :
+        print('==== Failure To Retrieve ====')
+        print(data)
+        break
+
+    cur.execute('''INSERT INTO Locations (address, geodata)
+            VALUES ( ?, ? )''', (memoryview(address.encode()), memoryview(data.encode()) ) )
+    conn.commit()
+    if count % 10 == 0 :
+        print('Pausing for a bit...')
+        time.sleep(5)
+
+print("Run geodump.py to read the data from the database so you can vizualize it on a map.")
+
+exit=input("exit")
+
+----------------------------------------------------
+
+The API key is a unique identifier that authenticates requests associated with your project for usage and billing purposes. You must have at least one API key 
+associated with your project. API keys provide project authorization. 
+aca tenes un video que explica-----> https://developers.google.com/maps/documentation/places/android-sdk/get-api-key
+
+By identifying the calling project, you can use API keys to associate usage information with that project. API keys allow the Extensible Service Proxy (ESP) to reject
+calls from projects that haven't been granted access or enabled in the API.
+
+
+"spider like process" A spider is a program that visits Web sites and reads their pages and other information in order to create entries for a search engine index.
+lo menciona tambien por la idea de que se tenga en cuenta, en el programa, el hecho de que puede explotar pero la idea es que siga sin perder lo obtenido hasta ese 
+momento. Por eso usa los try: except: pass y bla...
+
+
+
+The Strip() method in Python removes or truncates the given characters from the beginning and the end of the original string. The default behavior of the strip()
+method is to remove the whitespace from the beginning and at the end of the string.
+
+cuando importo las liobrerias: import urllib.request, urllib.parse, urllib.error 
+la del medio sirve para lo siguiente, entre otras cosas:
+url = serviceurl + urllib.parse.urlencode(parms)
+
+uh = urllib.request.urlopen(url, context=ctx)
+data = uh.read().decode()
+
+
+
+The replace() method replaces a specified phrase with another specified phrase.
+
+
+
+json.loads() method can be used to parse a valid JSON string and convert it into a Python Dictionary.
